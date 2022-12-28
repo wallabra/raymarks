@@ -1,4 +1,4 @@
-const math = @import("std/math");
+const math = @import("std").math;
 
 pub const Point3 = struct {
     x: f32, y: f32, z: f32,
@@ -70,11 +70,11 @@ pub fn sum(p: Point3) f32 {
 }
 
 pub fn dot(a: Point3, b: Point3) f32 {
-    return a.mul(b).sum();
+    return sum(mul_p3(a, b));
 }
 
 pub fn len(p: Point3) f32 {
-    return p.mul(p).map(math.sqrt).sum();
+    return math.sqrt(sum(mul_p3(p, p)));
 }
 
 //pub fn approx_len(p: Point3) f32 {
