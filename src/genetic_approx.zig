@@ -3,12 +3,12 @@ const math = std.math;
 const mem = std.mem;
 const common = @import("common.zig");
 
-pub fn approximate_len(gene: common.Point3, vec: common.Point3) f32 {
+pub fn approximate_len(genome: common.Point3, vec: common.Point3) f32 {
     const p = common.sort(common.abs_p3(vec));
-    return common.sum(common.mul_p3(gene, p));
+    return common.sum(common.mul_p3(genome, p));
 }
 
-fn fitness(comptime maxdist: f32, comptime resolution: f32, gene: common.Point3) f32 {
+fn fitness(comptime maxdist: f32, comptime resolution: f32, genome: common.Point3) f32 {
     var x = -maxdist;
     var y = -maxdist;
     var z = -maxdist;
@@ -26,20 +26,20 @@ fn fitness(comptime maxdist: f32, comptime resolution: f32, gene: common.Point3)
 
                 const new_point = common.Point3 { .x = x, .y = y, .z = z };
                 const len_real = common.len(new_point);
-                const len_approx = approximate_len(gene, new_point);
+                const len_approx = approximate_len(genome, new_point);
 
-                //std.log.info("gene {d:.4},{d:.4},{d:.4}  vec {d:.4},{d:.4},{d:.4}  approx {d:.5}  real {d:.5}", .{gene.x, gene.y, gene.z, new_point.x, new_point.y, new_point.z, len_approx, len_real});
-                dist += @fabs(len_approx - len_real);
+                //std.log.info("genome {d:.4},{d:.4},{d:.4}  vec {d:.4},{d:.4},{d:.4}  approx {d:.5}  real {d:.5}", .{genome.x, genome.y, genome.z, new_point.x, new_point.y, new_point.z, len_approx, len_real});
+                dist += math.pow(f32, len_approx - len_real, 2.0);
             }
         }
     }
 
-    return -dist;
-    // return -dist / math.pow(f32, resolution, 3);
+    // return -@sqrt(dist);
+    return -@sqrt(dist / math.pow(f32, resolution, 3));
 }
 
-fn mutate(amount: f32, rng: *const std.rand.Random, gene: common.Point3) common.Point3 {
-    return common.add_p3(gene, _random_gene(rng, amount));
+fn mutate(amount: f32, rng: *const std.rand.Random, genome: common.Point3) common.Point3 {
+    return common.add_p3(genome, _random_genome(rng, amount));
 }
 
 fn rand_either(comptime T: type, rng: *const std.rand.Random, a: T, b: T) T {
@@ -55,20 +55,20 @@ fn breed(rng: *const std.rand.Random, g1: common.Point3, g2: common.Point3) comm
 }
 
 pub const EvolveOptions = struct {
-    /// How many of the upper fitness genes will not die. Others will leave room for new breeds or randoms.
+    /// How many of the upper fitness genomes will not die. Others will leave room for new breeds or randoms.
     /// Proportional value between 0 and 1.
     /// Named after the misanthropic Malthusian theory that populational reproduction is capped by food. Screw you Malthus.
     malthusian: f32 = 0.2,
 
-    /// How many of the slots left by killed off low-fitness genes are to be replaced with breeding.
+    /// How many of the slots left by killed off low-fitness genomes are to be replaced with breeding.
     /// Everything else will be initialized randomly.
     inbreeding: f32 = 0.4,
 
     /// How much mutation is to be inflicted per evolution step.
-    /// Multiplies a random number from a normal distribution (mean = 0, stddev = 1) that is added to every gene each evolution step.
+    /// Multiplies a random number from a normal distribution (mean = 0, stddev = 1) that is added to every genome each evolution step.
     mutation: f32 = 0.2,
 
-    /// The range of random values at which new random genes are initialized.
+    /// The range of random values at which new random genomes are initialized.
     init_random: f32 = 2.0,
 };
 
@@ -79,16 +79,16 @@ const QualifiedOptions = struct {
     inbreed_idx: u32,
 };
 
-const _GeneSortPair = struct {
-    gene: common.Point3,
+const _GenomeSortPair = struct {
+    genome: common.Point3,
     fit: f32,
 };
 
-fn gene_sort(_: void, a: _GeneSortPair, b: _GeneSortPair) bool {
+fn genome_sort(_: void, a: _GenomeSortPair, b: _GenomeSortPair) bool {
     return a.fit > b.fit;
 }
 
-fn _random_gene(rng: *const std.rand.Random, amount: f32) common.Point3 {
+fn _random_genome(rng: *const std.rand.Random, amount: f32) common.Point3 {
     return .{
         .x = rng.*.floatNorm(f32) * amount,
         .y = rng.*.floatNorm(f32) * amount,
@@ -96,14 +96,14 @@ fn _random_gene(rng: *const std.rand.Random, amount: f32) common.Point3 {
     };
 }
 
-pub fn GeneIncubator(comptime len: comptime_int) type {
+pub fn GenomeIncubator(comptime len: comptime_int) type {
     return struct {
-        genes: [len]common.Point3,
+        genomes: [len]common.Point3,
         fits:  [len]f32,
         const Self = @This();
 
         pub fn init(randomization: f32, rng: *const std.rand.Random) Self {
-            return (Self { .genes = mem.zeroes([len]common.Point3), .fits = mem.zeroes([len]f32) })._random_genes(randomization, rng).*;
+            return (Self { .genomes = mem.zeroes([len]common.Point3), .fits = mem.zeroes([len]f32) })._random_genomes(randomization, rng).*;
         }
 
         pub fn step_evolve(self: *Self, options: EvolveOptions, rng: *const std.rand.Random) void {
@@ -124,54 +124,54 @@ pub fn GeneIncubator(comptime len: comptime_int) type {
         }
 
         fn _pick_mate(self: *Self, qualified_options: QualifiedOptions, rng: *const std.rand.Random) common.Point3 {
-            const slice = self.genes[0..qualified_options.malthusian_idx + 1];
+            const slice = self.genomes[0..qualified_options.malthusian_idx + 1];
 
             return slice[rng.uintAtMost(u32, qualified_options.malthusian_idx)];
         }
 
         fn _inbreed(self: *Self, qualified_options: QualifiedOptions, rng: *const std.rand.Random) void {
-            for (self.genes[qualified_options.malthusian_idx + 1..qualified_options.inbreed_idx]) |*bred_gene| {
-                bred_gene.* = breed(rng, self._pick_mate(qualified_options, rng), self._pick_mate(qualified_options, rng));
+            for (self.genomes[qualified_options.malthusian_idx + 1..qualified_options.inbreed_idx]) |*bred_genome| {
+                bred_genome.* = breed(rng, self._pick_mate(qualified_options, rng), self._pick_mate(qualified_options, rng));
             }
         }
 
         fn _randomize_low(self: *Self, qualified_options: QualifiedOptions, rng: *const std.rand.Random) void {
-            for (self.genes[qualified_options.inbreed_idx..len]) |*randomized_gene| {
-                randomized_gene.* = _random_gene(rng, qualified_options.options.init_random);
+            for (self.genomes[qualified_options.inbreed_idx..len]) |*randomized_genome| {
+                randomized_genome.* = _random_genome(rng, qualified_options.options.init_random);
             }
         }
 
         fn _sort(self: *Self) void {
-            var res = mem.zeroes([len]_GeneSortPair);
+            var res = mem.zeroes([len]_GenomeSortPair);
 
-            for (self.genes) |gene, i| {
-                res[i] = _GeneSortPair {
-                    .gene = gene,
+            for (self.genomes) |genome, i| {
+                res[i] = _GenomeSortPair {
+                    .genome = genome,
                     .fit = self.fits[i]
                 };
             }
 
-            std.sort.sort(_GeneSortPair, &res, {}, gene_sort);
+            std.sort.sort(_GenomeSortPair, &res, {}, genome_sort);
 
             for (res) |pair, i| {
-                self.genes[i] = pair.gene;
+                self.genomes[i] = pair.genome;
                 self.fits[i]  = pair.fit;
             }
         }
 
         fn _mutate_all(self: *Self, qualified_options: QualifiedOptions, rng: *const std.rand.Random) void {
-            for (self.genes) |*gene| {
-                gene.* = mutate(qualified_options.options.mutation, rng, gene.*);
+            for (self.genomes) |*genome| {
+                genome.* = mutate(qualified_options.options.mutation, rng, genome.*);
             }
         }
 
-        fn _random_genes(self: *Self, amount: f32, rng: *const std.rand.Random) *Self {
+        fn _random_genomes(self: *Self, amount: f32, rng: *const std.rand.Random) *Self {
             if (amount <= 0.0) {
                 return self;
             }
 
-            for (self.genes) |*gene| {
-                gene.* = _random_gene(rng, amount);
+            for (self.genomes) |*genome| {
+                genome.* = _random_genome(rng, amount);
             }
             
             self._compute_fits();
@@ -180,8 +180,8 @@ pub fn GeneIncubator(comptime len: comptime_int) type {
         }
 
         fn _compute_fits(self: *Self) void {
-            for (&self.genes) |gene, i| {
-                self.fits[i] = fitness(8, 12, gene);
+            for (&self.genomes) |genome, i| {
+                self.fits[i] = fitness(20, 30, genome);
             }
             
             self._sort();
