@@ -26,8 +26,8 @@ pub fn point_oper_scalar(comptime oper: fn (a: f32, b: f32) f32) fn (a: Point3, 
 
 fn add_f32(a: f32, b: f32) f32 { return a + b; }
 fn sub_f32(a: f32, b: f32) f32 { return a - b; }
-fn mul_f32(a: f32, b: f32) f32 { return a - b; }
-fn div_f32(a: f32, b: f32) f32 { return a - b; }
+fn mul_f32(a: f32, b: f32) f32 { return a * b; }
+fn div_f32(a: f32, b: f32) f32 { return a / b; }
 
 pub const add_p3 = point_oper(add_f32);
 pub const sub_p3 = point_oper(sub_f32);
