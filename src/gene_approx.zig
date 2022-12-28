@@ -4,8 +4,8 @@ const mem = std.mem;
 const common = @import("common.zig");
 
 pub fn approximate_len(gene: common.Point3, vec: common.Point3) f32 {
-    const p = common.sort(vec);
-    return @fabs(common.dot(gene, p));
+    const p = common.sort(common.abs_p3(vec));
+    return common.sum(common.mul_p3(gene, p));
 }
 
 fn fitness(comptime maxdist: f32, comptime resolution: f32, gene: common.Point3) f32 {

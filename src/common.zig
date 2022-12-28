@@ -65,6 +65,14 @@ pub fn map(p: Point3, comptime func: fn (a: f32) f32) Point3 {
     };
 }
 
+pub fn abs_p3(p: Point3) Point3 {
+    return Point3 {
+        .x = @fabs(p.x),
+        .y = @fabs(p.y),
+        .z = @fabs(p.z),
+    };
+}
+
 pub fn sum(p: Point3) f32 {
     return p.x + p.y + p.z;
 }
