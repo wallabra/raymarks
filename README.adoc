@@ -1,0 +1,13 @@
+raymarks
+========
+:author: Gustavo Rehermann (wallabra)
+:homepage: https://github.com/wallabra/raymarks
+:description: A raymarcher project in Zig.
+:toc:
+:numbered:
+
+This is a raymarcher project meant as an exercise in learning Zig.
+
+A lot has yet to be done. Please don't use this codebase until it is more
+fleshed out.
+
