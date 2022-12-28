@@ -39,11 +39,7 @@ fn fitness(comptime maxdist: f32, comptime resolution: f32, gene: common.Point3)
 }
 
 fn mutate(amount: f32, rng: *const std.rand.Random, gene: common.Point3) common.Point3 {
-    return common.add_p3(gene, common.Point3 {
-        .x = rng.*.floatNorm(f32) * amount,
-        .y = rng.*.floatNorm(f32) * amount,
-        .z = rng.*.floatNorm(f32) * amount,
-    });
+    return common.add_p3(gene, _random_gene(rng, amount));
 }
 
 fn rand_either(comptime T: type, rng: *const std.rand.Random, a: T, b: T) T {
